@@ -1,5 +1,5 @@
-tft
-====
+**T**erminal **f**ile **t**ransfer tool
+===========================
 
 Script for transfering single or multiple files or small directories 
 from one terminal session to another by standard copy-paste.
