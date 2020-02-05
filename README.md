@@ -36,14 +36,14 @@ You can clone this repository or directly pull this script into `/usr/local/bin`
     curl -L  https://raw.githubusercontent.com/sternmotor/dude/master/tft > /usr/local/bin/tft 
     chmod 0755 /usr/local/bin/tft
 
-If `curl` is not available, use `wget`:
+If "curl" is not available, use "wget":
 
     wget https://raw.githubusercontent.com/sternmotor/dude/master/tft -O /usr/local/bin/tft
     chmod 0755 /usr/local/bin/tft
 
 You may want to transfer this tool manually to another machine like
 
-  tft "$(which tft)"
+    tft /usr/local/bin/tft
 
 , copy base64 text to clipboard and on the other site paste copied content 
 to bin dir like 
