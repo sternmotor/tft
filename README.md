@@ -2,9 +2,9 @@ tft
 ====
 
 Script for transfering single or multiple files or small directories 
-from one ssh session to another by means of terminals copy-paste.
+from one terminal session to another by standard copy-paste.
 
-Selected files are beeing combined (tar) compressed (gzip) and converted
+Selected files are beeing compressed (tar gzip) and converted
 to ascii text (base64). This text is printed to terminal and can be copied
 via terminal copy-paste and inserted into another tft instance
 on a different terminal. 
