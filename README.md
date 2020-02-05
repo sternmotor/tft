@@ -1,4 +1,4 @@
-**T**erminal **f**ile **t**ransfer tool
+TFT: terminal file transfer tool
 ===========================
 
 Script for transfering single or multiple files or small directories 
