@@ -48,6 +48,6 @@ You may want to transfer this tool manually to another machine like
 , copy base64 text to clipboard and on the other site paste copied content 
 to bin dir like 
 
-  cd /usr/local/bin
-  base64 -d | tar -xz
+    cd /usr/local/bin
+    base64 -d | tar -xz
 
