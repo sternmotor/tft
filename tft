@@ -1,0 +1,105 @@
+#!/bin/bash
+# tft = terminal file transfer
+# Script for transfering single or multiple files or small directories
+# from one linux box to another by means of terminals copy-paste.
+#
+# Selected files are beeing combined (tar) compressed (gzip) and converted
+# to ascii text (base64). This text is printed to terminal and can be copied
+# via terminal copy-paste and inserted into another tft instance
+# on a different terminal.
+#
+# Call this script with specified file pathes for parallel compression or call
+# this script without parameters for extracting files.
+#
+# For compression, for each FILE argument only the last path part is used.
+# d1/d2/d3/d4 is archived and later extracted as d4 in current dir.
+#
+# For transfering this script itself to another machine, run here
+#
+#   tft "$(which tft)"
+#   # copy base64 text to clipboard
+#
+#  and on the other site paste copied content from "source" machine after
+#   cd /usr/local/bin
+#   base64 -d | tar -xz
+#
+# To emulate tft script compressing (the opposite of process above),
+#  do
+#   tar -cz <FILES>  | base64 -w 512
+#
+# For extended copy/paste options via Putty terminal emulator, see
+# "clear scrollback buffer" and "select all" file menu options
+# Author: fellowtech GmbH 2015
+
+# script robustness
+    export LANG=C
+    set -o nounset
+    set -o pipefail
+    set -o errexit
+
+
+# size in bytes of text chunks written to terminal, 512 is a safe value
+    PIPE_BUFFER_LENGTH=512
+
+
+# build together tar common, TARCompress and TARDecompress options
+    TAR_OPTIONS="--gzip --preserve-permissions --numeric-owner --posix"
+    TARC_OPTIONS="--create --to-stdout --sparse"
+    TARD_OPTIONS="--extract"
+
+    # depending on tar version, force acl support
+    tar --acl 2>/dev/null || EC=$?
+    if [ $EC -ne 64 ]; then
+        TAR_OPTIONS="$TAR_OPTIONS --acls --xattrs"
+        TARD_OPTIONS="$TARD_OPTIONS --warning=no-timestamp"
+    fi
+
+
+# no paramters given: decompress. otherwise display help or compress
+if [ $# -gt 0 ]
+then
+    # compression mode (file(s) specified) or help requested
+    case "$1" in
+        -h|--help)
+            echo "Usage: $(basename $0) [<FILE1> [<FILE2> <DIR1> ... <FILEn> <DIRn>]]" 1>&2
+            echo "Run with FILE arguments for compression, without arguments for decompression." 1>&2
+            exit 1
+            ;;
+        *)
+            # tmpdir stuff is a workaround to have only "basneames" of targets in
+            # archive file, see below
+            tmpdir=$(mktemp --directory)
+            # collect tar contents: ahrd link or copy to temporary collector dir
+            while [[ $# -gt 0 ]]; do
+                file="$1"
+                shift
+                dir=$(dirname -- "$file")
+                target=$(basename -- "$file")
+                cd "$dir" > /dev/null   # go to target dir
+                    # try creating hard link, otherwise copy target to temp dir
+                    ln -- "$target" "$tmpdir/$target" 2>/dev/null \
+                    || cp -ar -- "$target" "$tmpdir/$target"
+                cd - > /dev/null        # return to starting dir
+            done
+            cd -- "$tmpdir"
+            # tar everything in tmpdir except "." and "..", encode it
+            find -maxdepth 1  -not -name '.' -print0 \
+                | tar $TAR_OPTIONS $TARC_OPTIONS --null --files-from - \
+                | base64 --wrap $PIPE_BUFFER_LENGTH
+            cd - > /dev/null        # return to starting dir
+            rm -rf "$tmpdir"
+            echo
+            echo -e "\n---" 1>&2
+            echo -n "Copy all lines above \"---\" to clipboard, call \"tft"\" 1>&2
+            echo -n "at target site and paste clipboard content there for " 1>&2
+            echo    "extraction" 1>&2
+            echo -n "In case tft is not set up at target site, run " 1>&2
+            echo    "\"base64 -d | tar -xz\" there, paste clipboard and hit CTRL-D" 1>&2
+        ;;
+    esac
+else
+    # decompression mode
+    echo "Paste encoded content, hit CTRL-D when finished."
+    base64 --decode | tar $TAR_OPTIONS $TARD_OPTIONS \
+    && echo "Finished, ok"
+fi
